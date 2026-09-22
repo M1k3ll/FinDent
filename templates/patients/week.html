@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}مراجعه‌های هفته{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="week-head">
+    <div>
+      <h1>مراجعه‌های {% if is_current %}این هفته{% else %}هفته‌ی انتخابی{% endif %}</h1>
+      <p class="sub">{{ start|jdate }} تا {{ end|jdate }}</p>
+    </div>
+    <div class="week-nav">
+      <a class="btn secondary small" href="{% url 'week' %}?week={{ prev_offset }}">هفته‌ی قبل</a>
+      {% if not is_current %}
+        <a class="btn secondary small" href="{% url 'week' %}?week={{ next_offset }}">هفته‌ی بعد</a>
+        <a class="btn secondary small" href="{% url 'week' %}">این هفته</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if days %}
+    <p class="count">{{ total|fa_digits }} مراجعه از {{ patients_count|fa_digits }} بیمار</p>
+    {% for day in days %}
+      <h2 class="day-title">{{ day.date|jlong }} <span class="badge">{{ day.visits|length|fa_digits }}</span></h2>
+      <ul class="week-list">
+        {% for v in day.visits %}
+        <li>
+          <a href="{% url 'patient_detail' v.patient_id %}">
+            <span class="file-tag small"><strong>{{ v.patient.file_number|file_no }}</strong></span>
+            <span class="name">{{ v.patient.full_name }}</span>
+            {% if v.notes %}<span class="note">{{ v.notes }}</span>{% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  {% else %}
+    <p class="empty-inline">در این هفته مراجعه‌ای ثبت نشده است.</p>
+  {% endif %}
+</section>
+{% endblock %}

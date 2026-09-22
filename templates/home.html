@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}خانه{% endblock %}
+{% block content %}
+<h1 class="greeting">سلام {{ user.get_full_name|default:user.username }}</h1>
+
+{% if not perms.patients.view_patient %}
+<p class="msg warning">هنوز به حساب شما دسترسی داده نشده است. از مدیر بخواهید حساب شما را به گروه «منشی» یا «دکتر» اضافه کند.</p>
+{% endif %}
+
+<div class="tiles">
+  {% if perms.patients.view_patient %}
+  <a class="tile tile-main" href="{% url 'search' %}">
+    <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span class="tile-title">جستجوی پرونده</span>
+    <span class="tile-sub">با کدملی، موبایل، شماره پرونده یا نام خانوادگی</span>
+  </a>
+  {% endif %}
+  {% if perms.patients.add_patient %}
+  <a class="tile" href="{% url 'patient_create' %}">
+    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <span class="tile-title">ثبت بیمار جدید</span>
+    <span class="tile-sub">شماره پرونده خودکار داده می‌شود</span>
+  </a>
+  {% endif %}
+  {% if perms.patients.view_visit %}
+  <a class="tile" href="{% url 'week' %}">
+    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+    <span class="tile-title">مراجعه‌های هفته</span>
+    <span class="tile-sub">چه کسانی از شنبه تا امروز آمده‌اند</span>
+  </a>
+  {% endif %}
+</div>
+
+{% if can_settings %}
+<p class="footer-link"><a href="{% url 'settings' %}">تنظیمات و مدیریت</a></p>
+{% endif %}
+{% endblock %}

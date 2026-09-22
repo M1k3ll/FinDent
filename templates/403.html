@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}دسترسی ندارید{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>به این بخش دسترسی ندارید</h1>
+  <p>حساب شما اجازه‌ی انجام این کار را ندارد. اگر لازم است، از مدیر بخواهید دسترسی را تغییر دهد.</p>
+  <p><a class="btn" href="{% url 'home' %}">بازگشت به صفحه اصلی</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}جستجوی پرونده{% endblock %}
+{% block content %}
+<form class="searchbox" id="search-form" method="get" action="{% url 'search' %}" data-live-search="{% url 'search' %}" role="search">
+  <label for="q" class="sr-only">جستجوی پرونده</label>
+  <input id="q" name="q" type="search" value="{{ q }}" placeholder="کدملی، موبایل، شماره پرونده یا نام خانوادگی" autocomplete="off" autofocus>
+  <button class="btn" type="submit">جستجو</button>
+</form>
+<div id="results" aria-live="polite">{% include "patients/_results.html" %}</div>
+{% endblock %}

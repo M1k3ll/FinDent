@@ -1,0 +1,38 @@
+{% load fa %}
+{% if not q %}
+  <p class="hint">شروع به تایپ کنید. نتیجه‌ها همان لحظه نمایش داده می‌شوند و با Enter اولین پرونده باز می‌شود.</p>
+{% elif not results %}
+  <div class="empty">
+    <p><strong>پرونده‌ای پیدا نشد.</strong></p>
+    <p>املای نام یا ارقام را بررسی کنید، یا بیمار را ثبت کنید.</p>
+    {% if perms.patients.add_patient %}<p><a class="btn secondary" href="{% url 'patient_create' %}">ثبت بیمار جدید</a></p>{% endif %}
+  </div>
+{% else %}
+  <p class="count">{{ results|length|fa_digits }} نتیجه</p>
+  <ul class="result-list">
+    {% for p in results %}
+    <li class="result">
+      <a class="open" href="{% url 'patient_detail' p.pk %}">
+        <span class="file-tag"><small>پرونده</small><strong>{{ p.file_number|file_no }}</strong></span>
+        <span class="info">
+          <strong class="name">{{ p.full_name }}</strong>
+          <dl class="facts">
+            <div><dt>کدملی</dt><dd class="num">{{ p.national_id|fa_digits }}</dd></div>
+            <div><dt>موبایل</dt><dd class="num">{{ p.mobile|fa_digits }}</dd></div>
+            <div><dt>آخرین مراجعه</dt><dd>{{ p.last_visit|jdate }}</dd></div>
+            {% if p.file_location %}<div class="loc"><dt>محل پرونده</dt><dd>{{ p.file_location }}</dd></div>{% endif %}
+          </dl>
+        </span>
+      </a>
+      {% if perms.patients.add_visit %}
+      <div class="row-actions">
+        <a class="btn secondary small" href="{% url 'visit_add' p.pk %}?next={{ next_url|urlencode }}">ثبت مراجعه امروز</a>
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% if results|length >= limit %}
+    <p class="hint">فقط {{ limit|fa_digits }} نتیجه‌ی اول نشان داده شد. جستجو را دقیق‌تر کنید.</p>
+  {% endif %}
+{% endif %}

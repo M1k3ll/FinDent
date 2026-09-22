@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}صفحه پیدا نشد{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>صفحه پیدا نشد</h1>
+  <p>این آدرس وجود ندارد یا پرونده‌ی مورد نظر حذف شده است.</p>
+  <p><a class="btn" href="{% url 'search' %}">جستجوی پرونده</a></p>
+</section>
+{% endblock %}

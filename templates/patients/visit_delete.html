@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}حذف مراجعه{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>حذف این مراجعه؟</h1>
+  <p><strong>{{ visit.patient.full_name }}</strong> (پرونده {{ visit.patient.file_number|file_no }})</p>
+  <p>{{ visit.date|jlong }}{% if visit.notes %}: {{ visit.notes }}{% endif %}</p>
+  <p class="sub">این کار قابل بازگشت نیست، ولی در لاگ تغییرات ثبت می‌شود.</p>
+  <form method="post" class="actions">
+    {% csrf_token %}
+    <button class="btn danger" type="submit">بله، حذف شود</button>
+    <a class="btn secondary" href="{% url 'patient_detail' visit.patient_id %}">انصراف</a>
+  </form>
+</section>
+{% endblock %}

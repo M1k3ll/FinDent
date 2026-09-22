@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}لاگ تغییرات{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="week-head">
+    <h1>لاگ تغییرات</h1>
+    <div class="week-nav">
+      {% if only_changes %}
+        <a class="btn secondary small" href="{% url 'audit_log' %}">نمایش همه</a>
+      {% else %}
+        <a class="btn secondary small" href="{% url 'audit_log' %}?only=changes">فقط تغییرات (بدون ورود)</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="table-wrap">
+  <table class="data">
+    <thead><tr><th>زمان</th><th>کاربر</th><th>عملیات</th><th>بیمار</th><th>جزئیات</th></tr></thead>
+    <tbody>
+      {% for log in page %}
+      <tr>
+        <td class="nowrap">{{ log.created_at|jdatetime }}</td>
+        <td>{{ log.username|default:"—" }}</td>
+        <td>{{ log.get_action_display }}</td>
+        <td>{% if log.patient_id %}<a href="{% url 'patient_detail' log.patient_id %}">{{ log.patient_label }}</a>{% else %}{{ log.patient_label|default:"—" }}{% endif %}</td>
+        <td class="pre">{{ log.details|default:"" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="empty-inline">موردی ثبت نشده است.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if page.paginator.num_pages > 1 %}
+  <nav class="pager" aria-label="صفحه‌بندی">
+    {% if page.has_previous %}<a class="btn secondary small" href="?page={{ page.previous_page_number }}{% if only_changes %}&only=changes{% endif %}">قبلی</a>{% endif %}
+    <span>صفحه {{ page.number|fa_digits }} از {{ page.paginator.num_pages|fa_digits }}</span>
+    {% if page.has_next %}<a class="btn secondary small" href="?page={{ page.next_page_number }}{% if only_changes %}&only=changes{% endif %}">بعدی</a>{% endif %}
+  </nav>
+  {% endif %}
+</section>
+{% endblock %}

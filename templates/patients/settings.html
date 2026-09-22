@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}تنظیمات{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>تنظیمات و مدیریت</h1>
+  <ul class="link-list">
+    {% if perms.patients.view_auditlog %}
+      <li><a href="{% url 'audit_log' %}"><strong>لاگ تغییرات</strong><span>چه کسی، چه زمانی، چه چیزی را تغییر داده است</span></a></li>
+    {% endif %}
+    {% if user.is_staff %}
+      <li><a href="/admin/auth/user/"><strong>کاربران</strong><span>افزودن منشی یا دکتر، تغییر رمز، غیرفعال کردن حساب</span></a></li>
+      <li><a href="/admin/"><strong>مدیریت داده‌ها</strong><span>بخش پیشرفته، فقط برای مدیر</span></a></li>
+    {% endif %}
+  </ul>
+</section>
+{% endblock %}

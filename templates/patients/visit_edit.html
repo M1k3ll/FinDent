@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}ویرایش مراجعه{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <div class="edit-banner">
+    <span class="file-tag"><small>پرونده</small><strong>{{ visit.patient.file_number|file_no }}</strong></span>
+    <div>
+      <h1>ویرایش مراجعه</h1>
+      <p class="sub">{{ visit.patient.full_name }}</p>
+    </div>
+  </div>
+  <form method="post" class="form" data-confirm="تغییرات این مراجعه ذخیره شود؟">
+    {% csrf_token %}
+    {% include "patients/_field.html" with field=form.date %}
+    {% include "patients/_field.html" with field=form.notes %}
+    <div class="actions">
+      <button class="btn" type="submit">ذخیره تغییرات</button>
+      <a class="btn secondary" href="{% url 'patient_detail' visit.patient_id %}">انصراف</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

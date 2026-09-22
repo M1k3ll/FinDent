@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}پرونده {{ patient.file_number|file_no }}{% endblock %}
+{% block content %}
+<section class="card patient-head">
+  <span class="file-tag big"><small>شماره پرونده</small><strong>{{ patient.file_number|file_no }}</strong></span>
+  <div class="head-text">
+    <h1>{{ patient.full_name }}</h1>
+    {% if patient.file_location %}
+      <p class="location">محل نگهداری پرونده: <strong>{{ patient.file_location }}</strong></p>
+    {% else %}
+      <p class="location none">محل نگهداری پرونده ثبت نشده است.</p>
+    {% endif %}
+  </div>
+  <div class="head-actions">
+    {% if perms.patients.change_patient %}<a class="btn secondary" href="{% url 'patient_edit' patient.pk %}">ویرایش پرونده</a>{% endif %}
+    <a class="btn secondary" href="{% url 'search' %}">جستجوی جدید</a>
+  </div>
+</section>
+
+<section class="card">
+  <h2>مشخصات</h2>
+  <dl class="details">
+    <div><dt>کدملی</dt><dd class="num">{{ patient.national_id|fa_digits }}</dd></div>
+    <div><dt>موبایل</dt><dd class="num">{{ patient.mobile|fa_digits }}</dd></div>
+    <div><dt>تاریخ تولد</dt><dd>{% if patient.birth_date %}{{ patient.birth_date|jdate }} ({{ patient.age|fa_digits }} ساله){% else %}—{% endif %}</dd></div>
+    <div><dt>ثبت در</dt><dd>{{ patient.created_at|jdate }}</dd></div>
+    <div class="wide"><dt>آدرس</dt><dd>{{ patient.address|default:"—"|linebreaksbr }}</dd></div>
+    <div class="wide"><dt>توضیحات</dt><dd>{{ patient.notes|default:"—"|linebreaksbr }}</dd></div>
+  </dl>
+</section>
+
+<section class="card">
+  <h2>مراجعه‌ها <span class="badge">{{ visits|length|fa_digits }}</span></h2>
+
+  {% if perms.patients.add_visit %}
+  <form method="post" action="{% url 'visit_add' patient.pk %}" class="visit-form" data-confirm="این مراجعه ثبت شود؟">
+    {% csrf_token %}
+    <div class="visit-row">
+      {{ form.notes }}
+      <button class="btn" type="submit">ثبت مراجعه امروز</button>
+    </div>
+    <details class="other-date">
+      <summary>ثبت با تاریخ دیگر</summary>
+      <div class="field">
+        <label for="{{ form.date.id_for_label }}">تاریخ مراجعه (شمسی)</label>
+        {{ form.date }}
+        <p class="help">اگر پر شود، به‌جای امروز همین تاریخ ثبت می‌شود.</p>
+      </div>
+    </details>
+    {% if visited_today %}<p class="msg warning">امروز قبلاً برای این بیمار مراجعه ثبت شده است.</p>{% endif %}
+  </form>
+  {% endif %}
+
+  {% if visits %}
+    <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>تاریخ</th><th>توضیحات</th><th class="col-actions"><span class="sr-only">عملیات</span></th></tr></thead>
+      <tbody>
+        {% for v in visits %}
+        <tr>
+          <td class="nowrap">{{ v.date|jlong }}</td>
+          <td>{{ v.notes|default:"—" }}</td>
+          <td class="col-actions">
+            {% if perms.patients.change_visit %}<a href="{% url 'visit_edit' v.pk %}">ویرایش</a>{% endif %}
+            {% if perms.patients.delete_visit %}<a class="danger-link" href="{% url 'visit_delete' v.pk %}">حذف</a>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  {% else %}
+    <p class="empty-inline">هنوز مراجعه‌ای ثبت نشده است.</p>
+  {% endif %}
+</section>
+{% endblock %}

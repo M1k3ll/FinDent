@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}درباره ما{% endblock %}
+{% block content %}
+  <section class="card narrow">
+    <h1>درباره ما</h1>
+    <p>{{ about_text }}</p>
+
+    <h2>ارتباط با ما</h2>
+    <p><strong>{{ site_developer_name }}</strong></p>
+    <p class="num" dir="ltr">{{ site_developer_phone }}</p>
+    <p class="num" dir="ltr">{{ site_developer_email }}</p>
+
+    <p><a href="{% url 'home' %}">بازگشت</a></p>
+  </section>
+{% endblock %}

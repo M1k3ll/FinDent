@@ -1,0 +1,42 @@
+{% load static %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% endblock %} | Findent</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'home' %}" dir="ltr">Findent</a>
+    {% if user.is_authenticated %}
+      <nav class="nav" aria-label="منوی اصلی">
+        <a href="{% url 'search' %}">جستجو</a>
+        {% if perms.patients.add_patient %}<a href="{% url 'patient_create' %}">بیمار جدید</a>{% endif %}
+        {% if perms.patients.view_visit %}<a href="{% url 'week' %}">مراجعه‌های هفته</a>{% endif %}
+      </nav>
+      <div class="who">
+        <span>{{ user.get_full_name|default:user.username }}</span>
+        <a href="{% url 'password_change' %}">تغییر رمز</a>
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="link">خروج</button></form>
+      </div>
+    {% endif %}
+  </header>
+
+  <main class="page {% block page_class %}{% endblock %}">
+    {% if messages %}
+      <ul class="messages" role="status">
+        {% for message in messages %}<li class="msg {{ message.tags }}">{{ message }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+
+<footer class="site-footer">
+  <a href="{% url 'about' %}"> "hghfgh"</a>
+</footer>
+
+  <script src="{% static 'js/app.js' %}" defer></script>
+</body>
+</html>

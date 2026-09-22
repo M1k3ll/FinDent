@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}{% if patient %}ویرایش پرونده{% else %}بیمار جدید{% endif %}{% endblock %}
+{% block content %}
+<section class="card">
+  {% if patient %}
+    <div class="edit-banner">
+      <span class="file-tag"><small>پرونده</small><strong>{{ patient.file_number|file_no }}</strong></span>
+      <div>
+        <h1>ویرایش پرونده</h1>
+        <p class="sub">{{ patient.full_name }}</p>
+      </div>
+    </div>
+  {% else %}
+    <h1>ثبت بیمار جدید</h1>
+    <p class="sub">شماره پرونده بعد از ذخیره به‌طور خودکار داده می‌شود.</p>
+  {% endif %}
+
+  <form method="post" class="form"{% if patient %} data-confirm="تغییرات این پرونده ذخیره شود؟"{% endif %}>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <ul class="messages">{% for e in form.non_field_errors %}<li class="msg error">{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+    <div class="form-grid">
+      {% include "patients/_field.html" with field=form.first_name %}
+      {% include "patients/_field.html" with field=form.last_name %}
+      {% include "patients/_field.html" with field=form.national_id %}
+      {% include "patients/_field.html" with field=form.mobile %}
+      {% include "patients/_field.html" with field=form.birth_date %}
+      {% include "patients/_field.html" with field=form.file_location %}
+      {% include "patients/_field.html" with field=form.address wide=True %}
+      {% include "patients/_field.html" with field=form.notes wide=True %}
+    </div>
+
+      {% if form.national_id_warning %}
+    <div class="msg warning" role="alert" id="national-id-warning">
+      <strong>کدملی وارد شده معتبر نیست.</strong>
+      ممکن است اشتباه تایپ شده باشد. اگر بیمار کدملی ندارد یا از درست بودن آن مطمئن هستید،
+      می‌توانید با همین کدملی ثبت کنید. آیا مطمئن هستید که می‌خواهید ثبت کنید؟
+      <div class="actions">
+        <button class="btn" type="submit" name="confirm_national_id" value="{{ form.national_id_confirm_value }}">
+          بله، با همین کدملی {% if patient %}ذخیره شود{% else %}ثبت شود{% endif %}
+        </button>
+      </div>
+    </div>
+  {% endif %}
+  
+    <div class="actions">
+      <button class="btn" type="submit">{% if patient %}ذخیره تغییرات{% else %}ثبت پرونده{% endif %}</button>
+      {% if patient %}
+        <a class="btn secondary" href="{% url 'patient_detail' patient.pk %}">انصراف</a>
+      {% else %}
+        <a class="btn secondary" href="{% url 'home' %}">انصراف</a>
+      {% endif %}
+    </div>
+  </form>
+</section>
+{% endblock %}
