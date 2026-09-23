@@ -71,6 +71,8 @@ p { margin: 0 0 .8rem; }
 .nav a:hover, .who a:hover { color: #fff; text-decoration: underline; }
 .who { display: flex; align-items: center; gap: 1rem; color: #b8cbce; font-size: .92rem; }
 .who form { margin: 0; }
+.about-guest { margin-inline-start: auto; color: #dbe8ea; text-decoration: none; font-size: .9rem; }
+.about-guest:hover { color: #fff; text-decoration: underline; }
 button.link {
   background: none; border: 0; padding: 0; font: inherit; cursor: pointer;
   color: #dbe8ea;

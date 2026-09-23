@@ -9,6 +9,9 @@
 <body>
   <header class="topbar">
     <a class="brand" href="{% url 'home' %}" dir="ltr">Findent</a>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'about' %}" class="about-guest">aboutus</a>
+      {% endif %}
     {% if user.is_authenticated %}
       <nav class="nav" aria-label="منوی اصلی">
         <a href="{% url 'search' %}">جستجو</a>
@@ -17,6 +20,7 @@
       </nav>
       <div class="who">
         <span>{{ user.get_full_name|default:user.username }}</span>
+        <a href="{% url 'about' %}">aboutus</a>
         <a href="{% url 'password_change' %}">تغییر رمز</a>
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="link">خروج</button></form>
       </div>
@@ -33,9 +37,9 @@
   </main>
 
 
-<footer class="site-footer">
-  <a href="{% url 'about' %}"> aaaaaaaaaa</a>
-</footer>
+<!-- <footer class="site-footer">
+  <a href="{% url 'about' %}"> AboutUs</a>
+</footer> -->
 
   <script src="{% static 'js/app.js' %}" defer></script>
 </body>
