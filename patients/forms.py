@@ -2,12 +2,11 @@ import re
 from datetime import date
 
 from django import forms
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from .jalali import format_jalali, parse_jalali_date
-from .models import Patient, Visit
+from .models import Patient, PatientPhoto, Visit
 from .utils import digits_only, is_valid_national_id, normalize_text, to_fa_digits
 
 
@@ -60,7 +59,7 @@ class PatientForm(forms.ModelForm):
         ]
         widgets = {
             "national_id": forms.TextInput(
-                attrs={"class": "num", "dir": "ltr", "inputmode": "numeric", "maxlength": "10", "autocomplete": "off"}
+                attrs={"class": "num", "dir": "ltr", "inputmode": "numeric", "maxlength": "20", "autocomplete": "off"}
             ),
             "mobile": forms.TextInput(
                 attrs={"class": "num", "dir": "ltr", "inputmode": "numeric", "maxlength": "11", "autocomplete": "off"}
@@ -72,29 +71,15 @@ class PatientForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.label_suffix = ""
+        self.national_id_warning = False       # آیا باید هشدار «کدملی نامعتبر» نشان داده شود؟
+        self.national_id_problem = ""          # توضیح مشکل: طول یا فرمت
+        self.national_id_confirm_value = ""    # کدملی‌ای که دکمه‌ی تأیید برای آن ارسال می‌شود
 
     def clean_first_name(self):
         return normalize_text(self.cleaned_data["first_name"])
 
     def clean_last_name(self):
         return normalize_text(self.cleaned_data["last_name"])
-
-    # def clean_national_id(self):
-    #     value = digits_only(self.cleaned_data["national_id"])
-    #     if len(value) != 10:
-    #         raise ValidationError("کدملی باید ۱۰ رقم باشد.")
-    #     if settings.FINDENT_STRICT_NATIONAL_ID and not is_valid_national_id(value):
-    #         raise ValidationError("این کدملی معتبر نیست. ارقام را دوباره بررسی کنید.")
-    #     others = Patient.objects.filter(national_id=value)
-    #     if self.instance.pk:
-    #         others = others.exclude(pk=self.instance.pk)
-    #     other = others.first()
-    #     if other:
-    #         raise ValidationError(
-    #             f"این کدملی قبلاً برای «{other.full_name}» با شماره پرونده "
-    #             f"{to_fa_digits(f'{other.file_number:05d}')} ثبت شده است."
-    #         )
-    #     return value
 
     def clean_national_id(self):
         value = digits_only(self.cleaned_data["national_id"])
@@ -131,10 +116,9 @@ class PatientForm(forms.ModelForm):
         if other:
             raise ValidationError(
                 f"این کدملی قبلاً برای «{other.full_name}» با شماره پرونده "
-                f"{to_fa_digits(f'{other.file_number:05d}')} ثبت شده است."
+                f"{to_fa_digits(f'{other.file_number}')} ثبت شده است."
             )
         return value
-    
 
     def clean_mobile(self):
         value = digits_only(self.cleaned_data["mobile"])
@@ -153,12 +137,31 @@ class PatientForm(forms.ModelForm):
         return value
 
 
+class AmountField(forms.IntegerField):
+    """مبلغ به تومان؛ ارقام فارسی و جداکننده‌های هزارگان (، یا ,) هم قبول می‌شود."""
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        cleaned = digits_only(str(value)).replace(",", "")
+        if not cleaned:
+            raise ValidationError("مبلغ باید فقط عدد باشد.", code="invalid")
+        return int(cleaned)
+
+
 class VisitForm(forms.ModelForm):
     date = JalaliDateField(label="تاریخ مراجعه (شمسی)", required=False)
+    amount = AmountField(
+        label="مبلغ (تومان)", required=False, min_value=0,
+        widget=forms.TextInput(attrs={
+            "class": "num", "dir": "ltr", "inputmode": "numeric",
+            "placeholder": "مبلغ به تومان (اختیاری)", "autocomplete": "off",
+        }),
+    )
 
     class Meta:
         model = Visit
-        fields = ["date", "notes"]
+        fields = ["date", "notes", "amount"]
         widgets = {
             "notes": forms.TextInput(
                 attrs={"placeholder": "توضیحات (اختیاری)", "maxlength": "300"}
@@ -169,12 +172,30 @@ class VisitForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.label_suffix = ""
         self.fields["date"].required = require_date
-        self.national_id_warning = False
-        self.national_id_problem = ""
-        self.national_id_confirm_value = ""
 
     def clean_date(self):
         value = self.cleaned_data.get("date")
         if value and value > timezone.localdate():
             raise ValidationError("تاریخ مراجعه نمی‌تواند در آینده باشد.")
         return value
+
+
+class PatientPhotoForm(forms.ModelForm):
+    class Meta:
+        model = PatientPhoto
+        fields = ["image", "caption"]
+        widgets = {
+            "caption": forms.TextInput(attrs={"placeholder": "توضیح (اختیاری)", "maxlength": "200"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label_suffix = ""
+        self.fields["image"].required = True
+        self.fields["image"].widget.attrs["accept"] = "image/*"
+
+    def clean_image(self):
+        image = self.cleaned_data["image"]
+        if image.size > 15 * 1024 * 1024:
+            raise ValidationError("حجم عکس نباید بیشتر از ۱۵ مگابایت باشد.")
+        return image

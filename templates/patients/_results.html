@@ -26,7 +26,11 @@
       </a>
       {% if perms.patients.add_visit %}
       <div class="row-actions">
-        <a class="btn secondary small" href="{% url 'visit_add' p.pk %}?next={{ next_url|urlencode }}">ثبت مراجعه امروز</a>
+        <form method="post" action="{% url 'visit_add' p.pk %}" class="quick-visit" data-confirm="ثبت مراجعه امروز برای {{ p.full_name }}؟">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ next_url }}">
+          <button class="btn secondary small" type="submit">ثبت مراجعه امروز</button>
+        </form>
       </div>
       {% endif %}
     </li>

@@ -5,19 +5,19 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import Max, Q
-from django.http import HttpResponse
+from django.db.models import Max, Q, Sum
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 
-from .forms import PatientForm, VisitForm
-from .jalali import format_jalali, weekday_index
-from .models import AuditLog, Patient, Visit
-from .utils import normalize_text, search_key, to_fa_digits
 from . import credit
+from .forms import PatientForm, PatientPhotoForm, VisitForm
+from .jalali import format_jalali, jalali_month_bounds, parse_jalali_date, weekday_index
+from .models import AuditLog, Patient, PatientPhoto, Visit
+from .utils import normalize_text, search_key, to_fa_digits
 
 SEARCH_LIMIT = 30
 
@@ -61,9 +61,12 @@ def _safe_next(request, fallback):
 
 
 # ---------------------------------------------------------------- خانه
+
+
 def about(request):
-        """درباره ما / ارتباط با ما — قابل دیدن حتی قبل از ورود."""
-        return render(request, "patients/about.html", {"about_text": credit.ABOUT_TEXT})
+    """درباره ما / ارتباط با ما — قابل دیدن حتی قبل از ورود (لینک پایین صفحه‌ی ورود هم هست)."""
+    return render(request, "patients/about.html", {"about_text": credit.ABOUT_TEXT})
+
 
 @access()
 def home(request):
@@ -187,6 +190,7 @@ def visit_add(request, pk):
 
     if request.method == "POST":
         form = VisitForm(request.POST)
+        photo_file = request.FILES.get("image")
         if form.is_valid():
             visit_date = form.cleaned_data["date"] or today
             duplicate = patient.visits.filter(date=visit_date).exists()
@@ -201,12 +205,27 @@ def visit_add(request, pk):
                 patient=patient,
                 date=visit_date,
                 notes=form.cleaned_data["notes"],
+                amount=form.cleaned_data.get("amount"),
                 created_by=request.user,
             )
             details = format_jalali(visit.date)
             if visit.notes:
                 details += f"\n{visit.notes}"
             AuditLog.record(request.user, AuditLog.VISIT_ADDED, patient, details)
+
+            if photo_file:
+                photo_form = PatientPhotoForm(request.POST, request.FILES)
+                if photo_form.is_valid():
+                    PatientPhoto.objects.create(
+                        patient=patient, visit=visit,
+                        image=photo_form.cleaned_data["image"],
+                        caption=photo_form.cleaned_data.get("caption", ""),
+                        uploaded_by=request.user,
+                    )
+                else:
+                    errs = "؛ ".join(e for field_errs in photo_form.errors.values() for e in field_errs)
+                    messages.warning(request, f"مراجعه ثبت شد ولی عکس ذخیره نشد: {errs}")
+
             messages.success(
                 request, f"مراجعه {format_jalali(visit.date)} برای {patient.full_name} ثبت شد."
             )
@@ -260,42 +279,133 @@ def visit_delete(request, pk):
     return render(request, "patients/visit_delete.html", {"visit": visit})
 
 
-# ---------------------------------------------------------------- مراجعه‌های هفته
+# ---------------------------------------------------------------- عکس‌های بیمار
+
+
+@access("patients.add_patientphoto")
+def patient_photo_add(request, pk):
+    patient = get_object_or_404(Patient, pk=pk)
+    next_url = _safe_next(request, reverse("patient_detail", args=[patient.pk]))
+    if request.method == "POST":
+        form = PatientPhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            PatientPhoto.objects.create(
+                patient=patient,
+                image=form.cleaned_data["image"],
+                caption=form.cleaned_data.get("caption", ""),
+                uploaded_by=request.user,
+            )
+            messages.success(request, "عکس اضافه شد.")
+        else:
+            errs = "؛ ".join(e for field_errs in form.errors.values() for e in field_errs)
+            messages.error(request, f"عکس ذخیره نشد: {errs}")
+    return redirect(next_url)
+
+
+@access("patients.view_patientphoto")
+def patient_photo_file(request, pk):
+    """فایل عکس؛ فقط از این آدرس قابل دیدن است، نه با لینک مستقیم بدون ورود."""
+    photo = get_object_or_404(PatientPhoto, pk=pk)
+    return FileResponse(photo.image.open("rb"))
+
+
+@access("patients.delete_patientphoto")
+def patient_photo_delete(request, pk):
+    photo = get_object_or_404(PatientPhoto.objects.select_related("patient"), pk=pk)
+    patient = photo.patient
+    if request.method == "POST":
+        photo.image.delete(save=False)
+        photo.delete()
+        messages.success(request, "عکس حذف شد.")
+        return redirect("patient_detail", pk=patient.pk)
+    return render(request, "patients/photo_delete.html", {"photo": photo})
+
+
+# ---------------------------------------------------------------- گزارش مراجعین (هفته/ماه/کل)
 
 
 @access("patients.view_visit")
-def week_visits(request):
-    try:
-        offset = max(-520, min(0, int(request.GET.get("week", 0))))
-    except ValueError:
-        offset = 0
+def visits_report(request):
+    period = request.GET.get("period", "week")
+    if period not in ("week", "month", "all"):
+        period = "week"
     today = timezone.localdate()
-    # هفته‌ی ایرانی از شنبه شروع می‌شود و جمعه تمام می‌شود
-    start = today - timedelta(days=weekday_index(today)) + timedelta(weeks=offset)
-    end = start + timedelta(days=6)
+    context = {"period": period}
 
-    visits = list(
-        Visit.objects.filter(date__range=(start, end))
-        .select_related("patient")
-        .order_by("date", "id")
-    )
-    by_date = {}
-    for v in visits:
-        by_date.setdefault(v.date, []).append(v)
-    days = [{"date": d, "visits": by_date[d]} for d in sorted(by_date)]
+    if period in ("week", "month"):
+        try:
+            offset = int(request.GET.get("offset", 0))
+        except ValueError:
+            offset = 0
+        offset = max(-1200, min(0, offset))
 
-    context = {
-        "days": days,
-        "total": len(visits),
-        "patients_count": len({v.patient_id for v in visits}),
-        "start": start,
-        "end": end,
-        "offset": offset,
-        "prev_offset": offset - 1,
-        "next_offset": offset + 1,
-        "is_current": offset == 0,
-    }
-    return render(request, "patients/week.html", context)
+        if period == "week":
+            start = today - timedelta(days=weekday_index(today)) + timedelta(weeks=offset)
+            end = start + timedelta(days=6)
+            title_current = "این هفته"
+        else:
+            start, end, _, _ = jalali_month_bounds(today, offset)
+            title_current = "این ماه"
+
+        visits = list(
+            Visit.objects.filter(date__range=(start, end))
+            .select_related("patient")
+            .order_by("date", "id")
+        )
+        by_date = {}
+        for v in visits:
+            by_date.setdefault(v.date, []).append(v)
+        days = [{"date": d, "visits": by_date[d]} for d in sorted(by_date)]
+        total_amount = sum(v.amount or 0 for v in visits)
+
+        context.update({
+            "days": days,
+            "total": len(visits),
+            "patients_count": len({v.patient_id for v in visits}),
+            "total_amount": total_amount,
+            "start": start,
+            "end": end,
+            "offset": offset,
+            "prev_offset": offset - 1,
+            "next_offset": offset + 1,
+            "is_current": offset == 0,
+            "title_current": title_current,
+        })
+        return render(request, "patients/visits_report.html", context)
+
+    # period == "all"
+    date_from = date_to = None
+    error = None
+    from_raw = request.GET.get("from", "").strip()
+    to_raw = request.GET.get("to", "").strip()
+    try:
+        if from_raw:
+            date_from = parse_jalali_date(from_raw)
+        if to_raw:
+            date_to = parse_jalali_date(to_raw)
+    except ValueError:
+        error = "تاریخ وارد شده معتبر نیست. به شکل 1405/06/29 وارد کنید."
+
+    qs = Visit.objects.select_related("patient").order_by("-date", "-id")
+    if not error:
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+
+    total_amount = qs.aggregate(s=Sum("amount"))["s"] or 0
+    total_count = qs.count()
+    page = Paginator(qs, 100).get_page(request.GET.get("page"))
+
+    context.update({
+        "page": page,
+        "from_raw": from_raw,
+        "to_raw": to_raw,
+        "error": error,
+        "total": total_count,
+        "total_amount": total_amount,
+    })
+    return render(request, "patients/visits_report.html", context)
 
 
 # ---------------------------------------------------------------- تنظیمات و لاگ

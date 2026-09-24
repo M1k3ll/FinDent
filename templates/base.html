@@ -10,17 +10,26 @@
   <header class="topbar">
     <a class="brand" href="{% url 'home' %}" dir="ltr">Findent</a>
     {% if not user.is_authenticated %}
-    <a href="{% url 'about' %}" class="about-guest">aboutus</a>
-      {% endif %}
+      <a href="{% url 'about' %}" class="about-guest">درباره ما</a>
+    {% endif %}
     {% if user.is_authenticated %}
       <nav class="nav" aria-label="منوی اصلی">
         <a href="{% url 'search' %}">جستجو</a>
         {% if perms.patients.add_patient %}<a href="{% url 'patient_create' %}">بیمار جدید</a>{% endif %}
-        {% if perms.patients.view_visit %}<a href="{% url 'week' %}">مراجعه‌های هفته</a>{% endif %}
+        {% if perms.patients.view_visit %}
+        <details class="nav-dropdown">
+          <summary>مراجعین</summary>
+          <div class="menu">
+            <a href="{% url 'visits_report' %}?period=week">مراجعین هفته</a>
+            <a href="{% url 'visits_report' %}?period=month">مراجعین ماه</a>
+            <a href="{% url 'visits_report' %}?period=all">مراجعین کل</a>
+          </div>
+        </details>
+        {% endif %}
       </nav>
       <div class="who">
         <span>{{ user.get_full_name|default:user.username }}</span>
-        <a href="{% url 'about' %}">aboutus</a>
+        <a href="{% url 'about' %}">درباره ما</a>
         <a href="{% url 'password_change' %}">تغییر رمز</a>
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="link">خروج</button></form>
       </div>
@@ -35,11 +44,6 @@
     {% endif %}
     {% block content %}{% endblock %}
   </main>
-
-
-<!-- <footer class="site-footer">
-  <a href="{% url 'about' %}"> AboutUs</a>
-</footer> -->
 
   <script src="{% static 'js/app.js' %}" defer></script>
 </body>

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}مراجعین{% endblock %}
+{% block content %}
+<section class="card">
+  <div class="tabs">
+    <a class="tab{% if period == 'week' %} active{% endif %}" href="{% url 'visits_report' %}?period=week">هفته</a>
+    <a class="tab{% if period == 'month' %} active{% endif %}" href="{% url 'visits_report' %}?period=month">ماه</a>
+    <a class="tab{% if period == 'all' %} active{% endif %}" href="{% url 'visits_report' %}?period=all">کل</a>
+  </div>
+
+  {% if period == 'all' %}
+
+    <form method="get" class="filter-row">
+      <input type="hidden" name="period" value="all">
+      <div class="field">
+        <label for="id_from">از تاریخ</label>
+        <input class="num" dir="ltr" id="id_from" name="from" value="{{ from_raw }}" placeholder="1405/01/01" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="id_to">تا تاریخ</label>
+        <input class="num" dir="ltr" id="id_to" name="to" value="{{ to_raw }}" placeholder="1405/06/29" inputmode="numeric" autocomplete="off">
+      </div>
+      <button class="btn secondary" type="submit">فیلتر</button>
+      {% if from_raw or to_raw %}<a class="btn secondary" href="{% url 'visits_report' %}?period=all">پاک کردن بازه</a>{% endif %}
+    </form>
+    {% if error %}<p class="msg error">{{ error }}</p>{% endif %}
+
+    <p class="summary">{{ total|fa_digits }} مراجعه — جمع مبلغ: {{ total_amount|fa_digits }} تومان</p>
+
+    {% if page.object_list %}
+      <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>تاریخ</th><th>بیمار</th><th>شماره پرونده</th><th>مبلغ (تومان)</th><th>توضیحات</th></tr></thead>
+        <tbody>
+        {% for v in page.object_list %}
+          <tr>
+            <td class="nowrap">{{ v.date|jdate }}</td>
+            <td><a href="{% url 'patient_detail' v.patient_id %}">{{ v.patient.full_name }}</a></td>
+            <td class="num">{{ v.patient.file_number|file_no }}</td>
+            <td class="num">{{ v.amount|default_if_none:"—"|fa_digits }}</td>
+            <td>{{ v.notes|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      </div>
+
+      {% if page.has_other_pages %}
+      <nav class="pagination">
+        {% if page.has_previous %}
+          <a class="btn secondary small" href="?period=all&amp;from={{ from_raw|urlencode }}&amp;to={{ to_raw|urlencode }}&amp;page={{ page.previous_page_number }}">قبلی</a>
+        {% endif %}
+        <span>صفحه {{ page.number|fa_digits }} از {{ page.paginator.num_pages|fa_digits }}</span>
+        {% if page.has_next %}
+          <a class="btn secondary small" href="?period=all&amp;from={{ from_raw|urlencode }}&amp;to={{ to_raw|urlencode }}&amp;page={{ page.next_page_number }}">بعدی</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    {% else %}
+      <p class="empty-inline">در این بازه مراجعه‌ای ثبت نشده است.</p>
+    {% endif %}
+
+  {% else %}
+
+    <div class="period-nav">
+      <a class="btn secondary small" href="?period={{ period }}&amp;offset={{ prev_offset }}">قبلی</a>
+      <strong>{% if is_current %}{{ title_current }}{% else %}{{ start|jdate }} تا {{ end|jdate }}{% endif %}</strong>
+      {% if not is_current %}<a class="btn secondary small" href="?period={{ period }}&amp;offset=0">بازگشت به {{ title_current }}</a>{% endif %}
+      <a class="btn secondary small" href="?period={{ period }}&amp;offset={{ next_offset }}">بعدی</a>
+    </div>
+
+    <p class="summary">{{ total|fa_digits }} مراجعه، {{ patients_count|fa_digits }} بیمار — جمع مبلغ: {{ total_amount|fa_digits }} تومان</p>
+
+    {% if days %}
+      {% for day in days %}
+      <div class="day-block">
+        <h3>{{ day.date|jlong }} <span class="badge">{{ day.visits|length|fa_digits }}</span></h3>
+        <ul class="plain">
+          {% for v in day.visits %}
+          <li>
+            <a href="{% url 'patient_detail' v.patient_id %}">{{ v.patient.full_name }}</a>
+            <span class="file-tag small"><strong>{{ v.patient.file_number|file_no }}</strong></span>
+            {% if v.amount %}<span class="num">— {{ v.amount|fa_digits }} تومان</span>{% endif %}
+            {% if v.notes %}<span class="dim">— {{ v.notes }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty-inline">در این بازه مراجعه‌ای ثبت نشده است.</p>
+    {% endif %}
+
+  {% endif %}
+</section>
+{% endblock %}

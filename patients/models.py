@@ -71,6 +71,7 @@ class Visit(models.Model):
     )
     date = models.DateField("تاریخ مراجعه", default=timezone.localdate, db_index=True)
     notes = models.CharField("توضیحات", max_length=300, blank=True)
+    amount = models.PositiveIntegerField("مبلغ (تومان)", null=True, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, editable=False,
         on_delete=models.SET_NULL, related_name="+", verbose_name="ثبت‌کننده",
@@ -84,6 +85,38 @@ class Visit(models.Model):
 
     def __str__(self):
         return f"{self.patient_id} @ {self.date}"
+
+
+def patient_photo_path(instance, filename):
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+    return f"patient_photos/{instance.patient_id}/{timezone.now():%Y%m%d%H%M%S%f}.{ext}"
+
+
+class PatientPhoto(models.Model):
+    """عکس دندان/پرونده‌ی بیمار. می‌تواند به یک مراجعه‌ی مشخص وصل باشد یا فقط به خودِ پرونده."""
+
+    patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, related_name="photos", verbose_name="بیمار"
+    )
+    visit = models.ForeignKey(
+        Visit, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="photos", verbose_name="مراجعه",
+    )
+    image = models.ImageField("عکس", upload_to=patient_photo_path)
+    caption = models.CharField("توضیح", max_length=200, blank=True)
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, editable=False,
+        on_delete=models.SET_NULL, related_name="+", verbose_name="بارگذاری‌کننده",
+    )
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "عکس"
+        verbose_name_plural = "عکس‌ها"
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"عکس {self.patient_id} ({self.uploaded_at:%Y-%m-%d})"
 
 
 class AuditLog(models.Model):
@@ -103,7 +136,6 @@ class AuditLog(models.Model):
         (VISIT_UPDATED, "ویرایش مراجعه"),
         (VISIT_DELETED, "حذف مراجعه"),
     ]
-         
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
@@ -130,7 +162,7 @@ class AuditLog(models.Model):
     @classmethod
     def record(cls, user, action, patient=None, details="", label=""):
         if not label and patient is not None:
-            label = f"{patient.file_number:05d} {patient.full_name}"
+            label = f"{patient.file_number} {patient.full_name}"
         authenticated = getattr(user, "is_authenticated", False)
         return cls.objects.create(
             user=user if authenticated else None,

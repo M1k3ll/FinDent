@@ -3,26 +3,32 @@ from django.db.models.signals import post_migrate
 
 
 def create_default_groups(sender, **kwargs):
-    """گروه‌های پیش‌فرض «منشی» و «دکتر» را (فقط اولین بار) می‌سازد."""
+    """گروه‌های پیش‌فرض «منشی» و «دکتر» را می‌سازد و دسترسی‌های پایه را تضمین می‌کند.
+
+    فقط دسترسی اضافه می‌شود (add، نه set)، پس اجرای دوباره‌ی migrate هیچ‌وقت
+    دسترسی‌ای را که خودت بعداً به این گروه‌ها اضافه کرده‌ای پاک نمی‌کند؛ فقط
+    مطمئن می‌شود این فهرست پایه همیشه وجود دارد (مثلاً بعد از اضافه شدن مدل عکس).
+    """
     from django.contrib.auth.models import Group, Permission
 
     definitions = {
         "منشی": [
             "view_patient", "add_patient", "change_patient",
             "view_visit", "add_visit", "change_visit",
+            "view_patientphoto", "add_patientphoto",
         ],
         "دکتر": [
             "view_patient", "add_patient", "change_patient",
             "view_visit", "add_visit", "change_visit", "delete_visit",
+            "view_patientphoto", "add_patientphoto", "delete_patientphoto",
             "view_auditlog",
         ],
     }
     for name, codes in definitions.items():
-        group, created = Group.objects.get_or_create(name=name)
-        if created or not group.permissions.exists():
-            group.permissions.set(
-                Permission.objects.filter(content_type__app_label="patients", codename__in=codes)
-            )
+        group, _ = Group.objects.get_or_create(name=name)
+        group.permissions.add(
+            *Permission.objects.filter(content_type__app_label="patients", codename__in=codes)
+        )
 
 
 class PatientsConfig(AppConfig):

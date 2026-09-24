@@ -1,36 +1,28 @@
-"""Findent: تنظیمات پروژه (اجرای محلی روی یک کامپیوتر مطب)."""
+"""تنظیمات Findent: سرور محلی جنگو با دیتابیس SQLite برای یک مطب."""
 import os
 from pathlib import Path
 
 from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# همه‌ی داده‌ها (دیتابیس، کلید امنیتی، لاگ) در پوشه‌ی data نگهداری می‌شود.
-DATA_DIR = BASE_DIR / "data"
+DATA_DIR = BASE_DIR / "data"  # دیتابیس، لاگ‌ها و کلید امنیتی اینجا هستند
 DATA_DIR.mkdir(exist_ok=True)
 
+# کلید امنیتی یک بار ساخته می‌شود و در data/secret_key.txt می‌ماند
+_key_file = DATA_DIR / "secret_key.txt"
+if os.environ.get("FINDENT_SECRET_KEY"):
+    SECRET_KEY = os.environ["FINDENT_SECRET_KEY"]
+else:
+    if not _key_file.exists():
+        _key_file.write_text(get_random_secret_key())
+    SECRET_KEY = _key_file.read_text().strip()
 
-def _load_secret_key():
-    key_file = DATA_DIR / "secret_key.txt"
-    if key_file.exists():
-        return key_file.read_text(encoding="utf-8").strip()
-    key = get_random_secret_key()
-    key_file.write_text(key, encoding="utf-8")
-    return key
+DEBUG = os.environ.get("FINDENT_DEBUG") == "1"
 
-
-SECRET_KEY = _load_secret_key()
-
-DEBUG = os.environ.get("FINDENT_DEBUG", "0") == "1"
-
-# برای استفاده در شبکه‌ی داخلی، آدرس کامپیوتر را با متغیر محیطی اضافه کنید.
+# برای استفاده روی شبکه‌ی مطب: set FINDENT_ALLOWED_HOSTS=192.168.1.10
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"] + [
     h.strip() for h in os.environ.get("FINDENT_ALLOWED_HOSTS", "").split(",") if h.strip()
 ]
-
-# اعتبارسنجی الگوریتمی کدملی. برای بیماران اتباع خارجی می‌توانید 0 بگذارید.
-FINDENT_STRICT_NATIONAL_ID = os.environ.get("FINDENT_STRICT_NATIONAL_ID", "1") == "1"
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -62,7 +54,6 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
-                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -83,11 +74,11 @@ DATABASES = {
 }
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 8},
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+     "OPTIONS": {"min_length": 6}},
 ]
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LANGUAGE_CODE = "fa"
 TIME_ZONE = "Asia/Tehran"
@@ -99,24 +90,41 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 WHITENOISE_USE_FINDERS = True
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# عکس‌های بیماران اینجا ذخیره می‌شوند؛ فقط از طریق ویوی patient_photo_file
+# (که ورود و دسترسی را چک می‌کند) قابل دیدن‌اند، نه با آدرس مستقیم.
+MEDIA_ROOT = DATA_DIR / "media"
+MEDIA_URL = "media/"  # مستقیماً استفاده نمی‌شود؛ فقط برای کامل بودن تنظیمات جنگو
+FILE_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024  # ۱۵ مگابایت
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "login"
+SESSION_COOKIE_AGE = 60 * 60 * 12  # ۱۲ ساعت
 
-# خروج خودکار پس از ۱۲ ساعت
-SESSION_COOKIE_AGE = 60 * 60 * 12
+# بکاپ محلیِ روزانه‌ی دیتابیس. پیش‌فرض یک پوشه کنار پروژه است؛ اگر هارد یا فلش
+# دیگری در کامپیوتر مطب هست، بهتر است FINDENT_BACKUP_DIR را به آنجا اشاره بدهی
+# (مثلاً در Task Scheduler، Environment: FINDENT_BACKUP_DIR=D:\Findent-Backups)
+BACKUP_DIR = Path(os.environ.get("FINDENT_BACKUP_DIR", str(BASE_DIR / "backups")))
+BACKUP_KEEP = int(os.environ.get("FINDENT_BACKUP_KEEP", "30"))  # چند نسخه‌ی آخر نگه داشته شود
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {"std": {"format": "%(asctime)s %(levelname)s %(name)s: %(message)s"}},
     "handlers": {
         "file": {
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(DATA_DIR / "findent.log"),
+            "maxBytes": 1_000_000,
+            "backupCount": 3,
             "encoding": "utf-8",
+            "formatter": "std",
         },
     },
-    "loggers": {"django": {"handlers": ["file"], "level": "WARNING"}},
+    "root": {"handlers": ["file"], "level": "WARNING"},
 }
