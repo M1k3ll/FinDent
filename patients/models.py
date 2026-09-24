@@ -6,7 +6,7 @@ from django.utils import timezone
 from .jalali import jalali_age
 from .utils import normalize_text, search_key
 
-
+#بیمار
 class Patient(models.Model):
     file_number = models.PositiveIntegerField("شماره پرونده", unique=True, editable=False)
     first_name = models.CharField("نام", max_length=60)
