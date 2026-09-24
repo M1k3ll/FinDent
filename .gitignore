@@ -1,8 +1,9 @@
 venv/
-data/
+data/*
+!data/db.sqlite3
 staticfiles/
 __pycache__/
 *.pyc
-db.sqlite3
-*.sqlite3
+
+
 *.log
