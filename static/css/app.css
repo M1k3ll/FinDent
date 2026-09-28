@@ -54,7 +54,8 @@ p { margin: 0 0 .8rem; }
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
-.num { direction: ltr; text-align: right; font-variant-numeric: tabular-nums; }
+.num { direction: ltr; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.num-head { text-align: right; white-space: nowrap; }
 .nowrap { white-space: nowrap; }
 
 /* ---------- نوار بالا ---------- */
@@ -338,3 +339,20 @@ input:focus, textarea:focus, select:focus {
 .photo-item { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
 .photo-item img { width: 100%; height: 8rem; object-fit: cover; display: block; }
 .photo-meta { padding: .4rem .5rem; display: flex; flex-direction: column; gap: .15rem; font-size: .82rem; }
+
+.medical-box { border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin: 1.2rem 0; }
+.medical-box legend { padding: 0 .4rem; font-weight: 700; color: var(--ink); }
+.checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: .5rem .8rem; }
+.checkbox-item { display: flex; align-items: center; gap: .4rem; font-weight: 400; cursor: pointer; }
+.checkbox-item input { width: auto; }
+
+.medical-alert {
+  display: flex; align-items: flex-start; gap: .6rem;
+  background: #fdeceb; border: 2px solid #d7362a; border-radius: 10px;
+  padding: .8rem 1rem; margin-bottom: 1rem; color: #7a0f08; font-weight: 700;
+}
+.medical-alert .icon { font-size: 1.4rem; line-height: 1; }
+.medical-alert ul { margin: .3rem 0 0; padding-inline-start: 1.2rem; font-weight: 700; }
+.medical-alert .extra { font-weight: 400; margin-top: .3rem; }
+
+.patient-avatar { width: 4.5rem; height: 4.5rem; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }

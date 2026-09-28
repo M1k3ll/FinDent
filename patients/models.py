@@ -6,11 +6,32 @@ from django.utils import timezone
 from .jalali import jalali_age
 from .utils import normalize_text, search_key
 
-#بیمار
+
 class Patient(models.Model):
+    MEDICAL_CONDITIONS = [
+        ("hepatitis", "هپاتیت"),
+        ("high_blood_pressure", "فشارخون"),
+        ("prolonged_bleeding", "خونریزی طولانی"),
+        ("rheumatic_fever", "تب روماتیسمی"),
+        ("liver_disorder", "اختلال کبدی"),
+        ("seizure", "تشنج"),
+        ("hiv", "ایدز"),
+        ("pregnancy", "حاملگی"),
+        ("miscarriage_history", "سابقه سقط"),
+        ("diabetes", "دیابت"),
+        ("allergy", "آلرژی"),
+        ("heart_disease", "بیماری قلبی"),
+        ("drug_sensitivity", "حساسیت دارویی"),
+        ("surgery_history", "سابقه عمل جراحی"),
+        ("cancer", "سرطان"),
+        ("medication_use", "مصرف دارو"),
+    ]
+    _MEDICAL_LABELS = dict(MEDICAL_CONDITIONS)
+
     file_number = models.PositiveIntegerField("شماره پرونده", unique=True, editable=False)
     first_name = models.CharField("نام", max_length=60)
     last_name = models.CharField("نام خانوادگی", max_length=80)
+    father_name = models.CharField("نام پدر", max_length=60, blank=True)
     national_id = models.CharField("کدملی", max_length=20, unique=True)
     mobile = models.CharField("موبایل", max_length=11)
     birth_date = models.DateField("تاریخ تولد", null=True, blank=True)
@@ -19,6 +40,14 @@ class Patient(models.Model):
         "محل نگهداری پرونده", max_length=100, blank=True,
         help_text="مثلاً: قفسه ۳، ردیف ۲",
     )
+    photo = models.ImageField("عکس بیمار", upload_to="patient_avatars/%Y/%m/", blank=True, null=True)
+
+    # بیماری‌های خاص: کدهای تیک‌خورده، با کاما جدا از هم (مثلاً "diabetes,allergy")
+    medical_conditions = models.CharField("بیماری‌های خاص", max_length=255, blank=True, default="")
+    hospitalization_history = models.CharField("سابقه بستری در بیمارستان", max_length=200, blank=True)
+    hospitalization_reason = models.CharField("علت بستری", max_length=200, blank=True)
+    other_conditions = models.CharField("سایر بیماری‌ها", max_length=300, blank=True)
+
     notes = models.TextField("توضیحات", blank=True)
     search_name = models.CharField(max_length=200, editable=False, db_index=True, default="")
     created_at = models.DateTimeField("تاریخ ثبت", auto_now_add=True)
@@ -45,6 +74,22 @@ class Patient(models.Model):
         if not self.birth_date:
             return None
         return jalali_age(self.birth_date, timezone.localdate())
+
+    @property
+    def medical_condition_codes(self):
+        return [c for c in self.medical_conditions.split(",") if c]
+
+    @property
+    def medical_condition_labels(self):
+        return [self._MEDICAL_LABELS[c] for c in self.medical_condition_codes if c in self._MEDICAL_LABELS]
+
+    @property
+    def has_medical_alert(self):
+        return bool(
+            self.medical_condition_codes
+            or self.hospitalization_history
+            or self.other_conditions
+        )
 
     def save(self, *args, **kwargs):
         self.first_name = normalize_text(self.first_name)

@@ -11,6 +11,26 @@
     </div>
   </div>
 
+  {% if patient.has_medical_alert %}
+  <div class="medical-alert" role="alert">
+    <span class="icon">⚠</span>
+    <div>
+      {% if patient.medical_condition_labels %}
+        <div>بیماری‌های خاص این بیمار:</div>
+        <ul>
+          {% for label in patient.medical_condition_labels %}<li>{{ label }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+      {% if patient.hospitalization_history %}
+        <div class="extra">سابقه بستری: {{ patient.hospitalization_history }}{% if patient.hospitalization_reason %} — علت: {{ patient.hospitalization_reason }}{% endif %}</div>
+      {% endif %}
+      {% if patient.other_conditions %}
+        <div class="extra">سایر بیماری‌ها: {{ patient.other_conditions }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   {% if duplicate %}
     <p class="msg warning">برای این تاریخ قبلاً مراجعه ثبت شده است. فقط اگر واقعاً مراجعه‌ی دوباره بوده ثبت کنید.</p>
   {% endif %}

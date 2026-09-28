@@ -66,3 +66,20 @@
     document.querySelectorAll("button[type=submit]").forEach(function (b) { b.disabled = false; });
   });
 })();
+
+// جداکننده‌ی هزارگان زنده برای فیلدهای مبلغ (کلاس amount-input)
+(function () {
+  function toEnDigits(s) {
+    return s.replace(/[۰-۹]/g, function (d) { return "۰۱۲۳۴۵۶۷۸۹".indexOf(d); });
+  }
+  function format(input) {
+    var raw = toEnDigits(input.value).replace(/[^\d]/g, "");
+    input.value = raw ? Number(raw).toLocaleString("en-US") : "";
+  }
+  document.addEventListener("input", function (e) {
+    if (e.target.matches && e.target.matches(".amount-input")) {
+      format(e.target);
+    }
+  });
+  document.querySelectorAll(".amount-input").forEach(format);
+})();

@@ -16,7 +16,7 @@
     <p class="sub">شماره پرونده بعد از ذخیره به‌طور خودکار داده می‌شود.</p>
   {% endif %}
 
-  <form method="post" class="form"{% if patient %} data-confirm="تغییرات این پرونده ذخیره شود؟"{% endif %}>
+  <form method="post" class="form" enctype="multipart/form-data"{% if patient %} data-confirm="تغییرات این پرونده ذخیره شود؟"{% endif %}>
     {% csrf_token %}
     {% if form.non_field_errors %}
       <ul class="messages">{% for e in form.non_field_errors %}<li class="msg error">{{ e }}</li>{% endfor %}</ul>
@@ -24,27 +24,44 @@
     <div class="form-grid">
       {% include "patients/_field.html" with field=form.first_name %}
       {% include "patients/_field.html" with field=form.last_name %}
+      {% include "patients/_field.html" with field=form.father_name %}
       {% include "patients/_field.html" with field=form.national_id %}
       {% include "patients/_field.html" with field=form.mobile %}
       {% include "patients/_field.html" with field=form.birth_date %}
       {% include "patients/_field.html" with field=form.file_location %}
+      {% include "patients/_field.html" with field=form.photo %}
       {% include "patients/_field.html" with field=form.address wide=True %}
-      {% include "patients/_field.html" with field=form.notes wide=True %}
     </div>
 
-      {% if form.national_id_warning %}
-    <div class="msg warning" role="alert" id="national-id-warning">
-      <strong>کدملی وارد شده معتبر نیست.</strong>
-      ممکن است اشتباه تایپ شده باشد. اگر بیمار کدملی ندارد یا از درست بودن آن مطمئن هستید،
-      می‌توانید با همین کدملی ثبت کنید. آیا مطمئن هستید که می‌خواهید ثبت کنید؟
-      <div class="actions">
-        <button class="btn" type="submit" name="confirm_national_id" value="{{ form.national_id_confirm_value }}">
-          بله، با همین کدملی {% if patient %}ذخیره شود{% else %}ثبت شود{% endif %}
-        </button>
+    <fieldset class="medical-box">
+      <legend>بیماری‌های خاص</legend>
+      <div class="checkbox-grid">
+        {% for checkbox in form.medical_conditions %}
+          <label class="checkbox-item">{{ checkbox.tag }} {{ checkbox.choice_label }}</label>
+        {% endfor %}
       </div>
+      <div class="form-grid" style="margin-top:.8rem">
+        {% include "patients/_field.html" with field=form.hospitalization_history %}
+        {% include "patients/_field.html" with field=form.hospitalization_reason %}
+        {% include "patients/_field.html" with field=form.other_conditions wide=True %}
+      </div>
+    </fieldset>
+
+    <div class="form-grid">
+      {% include "patients/_field.html" with field=form.notes wide=True %}
     </div>
-  {% endif %}
-  
+    {% if form.national_id_warning %}
+      <div class="msg warning" role="alert" id="national-id-warning">
+        <strong>هشدار کدملی:</strong> {{ form.national_id_problem }}
+        اگر بیمار تبعه‌ی خارجی است یا کدملی ندارد، می‌توانید با همین کد ثبت کنید.
+        آیا مطمئن هستید که می‌خواهید ثبت کنید؟
+        <div class="actions">
+          <button class="btn" type="submit" name="confirm_national_id" value="{{ form.national_id_confirm_value }}">
+            بله، با همین کدملی {% if patient %}ذخیره شود{% else %}ثبت شود{% endif %}
+          </button>
+        </div>
+      </div>
+    {% endif %}
     <div class="actions">
       <button class="btn" type="submit">{% if patient %}ذخیره تغییرات{% else %}ثبت پرونده{% endif %}</button>
       {% if patient %}

@@ -26,6 +26,18 @@ def file_no(value):
         return ""
 
 
+@register.filter
+def toman(value):
+    """مبلغ با جداکننده‌ی هزارگان و ارقام فارسی: ۱٬۵۰۰٬۰۰۰"""
+    if value in (None, ""):
+        return "—"
+    try:
+        grouped = f"{int(value):,}".replace(",", "٬")
+    except (TypeError, ValueError):
+        return to_fa_digits(value)
+    return to_fa_digits(grouped)
+
+
 def _as_date(value):
     if isinstance(value, datetime):
         return timezone.localtime(value).date()

@@ -50,12 +50,20 @@ class PatientForm(forms.ModelForm):
     birth_date = JalaliDateField(
         label="تاریخ تولد (شمسی)", required=False, help_text="مثلاً 1370/05/12"
     )
+    medical_conditions = forms.MultipleChoiceField(
+        label="بیماری‌های خاص",
+        choices=Patient.MEDICAL_CONDITIONS,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+    )
 
     class Meta:
         model = Patient
         fields = [
-            "first_name", "last_name", "national_id", "mobile",
-            "birth_date", "address", "file_location", "notes",
+            "first_name", "last_name", "father_name", "national_id", "mobile",
+            "birth_date", "address", "file_location", "photo",
+            "medical_conditions", "hospitalization_history", "hospitalization_reason",
+            "other_conditions", "notes",
         ]
         widgets = {
             "national_id": forms.TextInput(
@@ -66,6 +74,9 @@ class PatientForm(forms.ModelForm):
             ),
             "address": forms.Textarea(attrs={"rows": 2}),
             "notes": forms.Textarea(attrs={"rows": 3}),
+            "hospitalization_history": forms.TextInput(attrs={"placeholder": "مثلاً: 1403، بیمارستان..."}),
+            "hospitalization_reason": forms.TextInput(attrs={"placeholder": "علت بستری"}),
+            "other_conditions": forms.TextInput(attrs={"placeholder": "سایر بیماری‌ها (اختیاری)"}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -74,12 +85,26 @@ class PatientForm(forms.ModelForm):
         self.national_id_warning = False       # آیا باید هشدار «کدملی نامعتبر» نشان داده شود؟
         self.national_id_problem = ""          # توضیح مشکل: طول یا فرمت
         self.national_id_confirm_value = ""    # کدملی‌ای که دکمه‌ی تأیید برای آن ارسال می‌شود
+        if self.instance.pk:
+            self.fields["medical_conditions"].initial = self.instance.medical_condition_codes
 
     def clean_first_name(self):
         return normalize_text(self.cleaned_data["first_name"])
 
     def clean_last_name(self):
         return normalize_text(self.cleaned_data["last_name"])
+
+    def clean_father_name(self):
+        return normalize_text(self.cleaned_data.get("father_name", ""))
+
+    def clean_medical_conditions(self):
+        return ",".join(self.cleaned_data["medical_conditions"])
+
+    def clean_photo(self):
+        photo = self.cleaned_data.get("photo")
+        if photo and hasattr(photo, "size") and photo.size > 15 * 1024 * 1024:
+            raise ValidationError("حجم عکس نباید بیشتر از ۱۵ مگابایت باشد.")
+        return photo
 
     def clean_national_id(self):
         value = digits_only(self.cleaned_data["national_id"])
@@ -148,14 +173,20 @@ class AmountField(forms.IntegerField):
             raise ValidationError("مبلغ باید فقط عدد باشد.", code="invalid")
         return int(cleaned)
 
+    def prepare_value(self, value):
+        # وقتی فرم ویرایش باز می‌شود، مبلغ موجود هم با جداکننده نشان داده شود
+        if isinstance(value, int):
+            return f"{value:,}"
+        return value
+
 
 class VisitForm(forms.ModelForm):
     date = JalaliDateField(label="تاریخ مراجعه (شمسی)", required=False)
     amount = AmountField(
         label="مبلغ (تومان)", required=False, min_value=0,
         widget=forms.TextInput(attrs={
-            "class": "num", "dir": "ltr", "inputmode": "numeric",
-            "placeholder": "مبلغ به تومان (اختیاری)", "autocomplete": "off",
+            "class": "num amount-input", "dir": "ltr", "inputmode": "numeric",
+            "placeholder": "مثلاً 1,500,000", "autocomplete": "off",
         }),
     )
 

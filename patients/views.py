@@ -91,6 +91,7 @@ def find_patients(raw_query, limit=SEARCH_LIMIT):
         cond = Q(national_id__startswith=compact)
         if len(compact) >= 4:
             cond |= Q(mobile__contains=compact)
+            cond |= Q(national_id__contains=compact)
         if len(compact) <= 9:
             cond |= Q(file_number=number)
         results = list(base.filter(cond).order_by("last_name", "first_name")[:limit])
@@ -143,7 +144,7 @@ def patient_detail(request, pk):
 
 @access("patients.add_patient")
 def patient_create(request):
-    form = PatientForm(request.POST or None)
+    form = PatientForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         patient = form.save(commit=False)
         patient.created_by = request.user
@@ -165,7 +166,7 @@ def patient_create(request):
 @access("patients.change_patient")
 def patient_edit(request, pk):
     patient = get_object_or_404(Patient, pk=pk)
-    form = PatientForm(request.POST or None, instance=patient)
+    form = PatientForm(request.POST or None, request.FILES or None, instance=patient)
     if request.method == "POST" and form.is_valid():
         changes = _changes(form)
         if not changes:
@@ -277,6 +278,15 @@ def visit_delete(request, pk):
         messages.success(request, "مراجعه حذف شد.")
         return redirect("patient_detail", pk=patient.pk)
     return render(request, "patients/visit_delete.html", {"visit": visit})
+
+
+@access("patients.view_patient")
+def patient_avatar_file(request, pk):
+    """عکس پروفایل بیمار؛ فقط از این آدرس قابل دیدن است، نه با لینک مستقیم بدون ورود."""
+    patient = get_object_or_404(Patient, pk=pk)
+    if not patient.photo:
+        raise Http404
+    return FileResponse(patient.photo.open("rb"))
 
 
 # ---------------------------------------------------------------- عکس‌های بیمار
