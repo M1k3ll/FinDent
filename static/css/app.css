@@ -327,7 +327,7 @@ table.data {
 /* ستون‌های عددی مثل شماره پرونده و موبایل */
 .data th.num-head,
 .data td.num {
-    text-align: right;
+    text-align: center;
     direction: ltr;
     white-space: nowrap;
 }
