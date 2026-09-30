@@ -12,10 +12,10 @@
 فقط مقادیر زیر را عوض کن؛ ساختار فایل را تغییر نده.
 """
 
-DEVELOPER_NAME = "میکائیل احمدی"
-DEVELOPER_PHONE = "09137441529"
-DEVELOPER_EMAIL = "mikel0174873@yahoo.com"
+DEVELOPER_NAME = "نام / نام شرکت شما"
+DEVELOPER_PHONE = "0912-000-0000"
+DEVELOPER_EMAIL = "you@example.com"
 ABOUT_TEXT = (
-    "این نرم‌افزار (Findent) برای مدیریت و جستجوی سریع پرونده‌های فیزیکی "
+    "این نرم‌افزار (DentiX) برای مدیریت و جستجوی سریع پرونده‌ی کامل "
     "بیماران طراحی و توسعه داده شده است."
 )

@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}ورود{% endblock %}
 {% block page_class %}page-login{% endblock %}
 {% block content %}
 <section class="card narrow login">
-  <h1>ورود به Findent</h1>
-  <p class="sub">پرونده بیماران</p>
+  <img src="{% static 'img/logo-icon.png' %}" alt="DentiX" class="login-logo">
+  <h1>ورود به DentiX</h1>
+  <p class="sub">پرونده‌ی بیمار را پیدا کنید.</p>
   <form method="post" class="form">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">

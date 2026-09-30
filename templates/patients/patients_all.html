@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load fa %}
+{% block title %}همه‌ی بیماران{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>همه‌ی بیماران <span class="badge">{{ total|fa_digits }}</span></h1>
+
+  {% if page.object_list %}
+    <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th class="num-head">شماره پرونده</th><th>نام</th><th>نام پدر</th><th class="num-head">موبایل</th></tr></thead>
+      <tbody>
+        {% for p in page.object_list %}
+        <tr>
+          <td class="num"><a href="{% url 'patient_detail' p.pk %}">{{ p.file_number|file_no }}</a></td>
+          <td><a href="{% url 'patient_detail' p.pk %}">{{ p.full_name }}</a></td>
+          <td>{{ p.father_name|default:"—" }}</td>
+          <td class="num">{{ p.mobile|fa_digits }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    </div>
+
+    {% if page.has_other_pages %}
+    <nav class="pagination">
+      {% if page.has_previous %}<a class="btn secondary small" href="?page={{ page.previous_page_number }}">قبلی</a>{% endif %}
+      <span>صفحه {{ page.number|fa_digits }} از {{ page.paginator.num_pages|fa_digits }}</span>
+      {% if page.has_next %}<a class="btn secondary small" href="?page={{ page.next_page_number }}">بعدی</a>{% endif %}
+    </nav>
+    {% endif %}
+  {% else %}
+    <p class="empty-inline">هنوز هیچ بیماری ثبت نشده است.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,4 +1,4 @@
-"""تنظیمات Findent: سرور محلی جنگو با دیتابیس SQLite برای یک مطب."""
+"""تنظیمات DentiX: سرور محلی جنگو با دیتابیس SQLite برای یک مطب."""
 import os
 from pathlib import Path
 
@@ -20,19 +20,8 @@ else:
 DEBUG = os.environ.get("FINDENT_DEBUG") == "1"
 
 # برای استفاده روی شبکه‌ی مطب: set FINDENT_ALLOWED_HOSTS=192.168.1.10
-# ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"] + [
-#     h.strip() for h in os.environ.get("FINDENT_ALLOWED_HOSTS", "").split(",") if h.strip()
-# ]
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
-
-render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-if render_host:
-    ALLOWED_HOSTS.append(render_host)
-
-ALLOWED_HOSTS += [
-    h.strip()
-    for h in os.environ.get("FINDENT_ALLOWED_HOSTS", "").split(",")
-    if h.strip()
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"] + [
+    h.strip() for h in os.environ.get("FINDENT_ALLOWED_HOSTS", "").split(",") if h.strip()
 ]
 
 INSTALLED_APPS = [

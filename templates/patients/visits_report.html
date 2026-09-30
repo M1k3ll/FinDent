@@ -38,7 +38,7 @@
             <td class="nowrap">{{ v.date|jdate }}</td>
             <td><a href="{% url 'patient_detail' v.patient_id %}">{{ v.patient.full_name }}</a></td>
             <td class="num">{{ v.patient.file_number|file_no }}</td>
-            <td class="num">{{ v.amount|toman }}</td>
+            <td class="amount-cell">{{ v.amount|toman }}</td>
             <td>{{ v.notes|default:"—" }}</td>
           </tr>
         {% endfor %}
@@ -81,7 +81,7 @@
           <li>
             <a href="{% url 'patient_detail' v.patient_id %}">{{ v.patient.full_name }}</a>
             <span class="file-tag small"><strong>{{ v.patient.file_number|file_no }}</strong></span>
-            {% if v.amount %}<span class="num">— {{ v.amount|toman }} تومان</span>{% endif %}
+            {% if v.amount %}<span class="amount-cell">— {{ v.amount|toman }} تومان</span>{% endif %}
             {% if v.notes %}<span class="dim">— {{ v.notes }}</span>{% endif %}
           </li>
           {% endfor %}

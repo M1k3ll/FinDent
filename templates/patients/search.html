@@ -6,5 +6,6 @@
   <input id="q" name="q" type="search" value="{{ q }}" placeholder="کدملی، موبایل، شماره پرونده یا نام خانوادگی" autocomplete="off" autofocus>
   <button class="btn" type="submit">جستجو</button>
 </form>
+<p class="footer-link"><a href="{% url 'patients_all' %}">نمایش کل بیماران</a></p>
 <div id="results" aria-live="polite">{% include "patients/_results.html" %}</div>
 {% endblock %}

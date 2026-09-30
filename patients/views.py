@@ -125,6 +125,14 @@ def search(request):
     return render(request, "patients/search.html", context)
 
 
+@access("patients.view_patient")
+def patients_all(request):
+    qs = Patient.objects.all().order_by("-file_number")
+    paginator = Paginator(qs, 50)
+    page = paginator.get_page(request.GET.get("page"))
+    return render(request, "patients/patients_all.html", {"page": page, "total": paginator.count})
+
+
 # ---------------------------------------------------------------- بیمار
 
 

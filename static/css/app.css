@@ -18,6 +18,7 @@
   --bg: #edf2f3;
   --surface: #ffffff;
   --ink: #17282d;
+  --header-bg: #17282d;
   --muted: #56696f;
   --line: #cbd9dc;
   --teal: #0a6b72;
@@ -28,6 +29,22 @@
   --tab-tint: #fff3d1;
   --danger: #b0342b;
   --ok: #1d6f49;
+}
+
+:root[data-theme="dark"] {
+  --bg: #12191b;
+  --surface: #1b2528;
+  --ink: #e7eef0;
+  --muted: #9db0b5;
+  --line: #33454a;
+  --teal: #2fa7ae;
+  --teal-dark: #1f8288;
+  --teal-tint: #16333a;
+  --tab: #e0ab34;
+  --tab-ink: #1b1400;
+  --tab-tint: #3a2f10;
+  --danger: #e0685c;
+  --ok: #4cbd88;
 }
 
 * { box-sizing: border-box; }
@@ -56,17 +73,20 @@ p { margin: 0 0 .8rem; }
 }
 .num { direction: ltr; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .num-head { text-align: right; white-space: nowrap; }
+.amount-cell { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .nowrap { white-space: nowrap; }
 
 /* ---------- نوار بالا ---------- */
 .topbar {
   display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
-  padding: .6rem 1.4rem; background: var(--ink); color: #fff;
+  padding: .6rem 1.4rem; background: var(--header-bg); color: #fff;
 }
 .brand {
   font-weight: 700; font-size: 1.25rem; letter-spacing: .02em;
   color: var(--tab); text-decoration: none;
+  display: inline-flex; align-items: center; gap: .5rem;
 }
+.brand-logo { width: 1.9rem; height: 1.9rem; object-fit: contain; }
 .nav { display: flex; gap: 1.2rem; flex: 1; flex-wrap: wrap; }
 .nav a, .who a { color: #dbe8ea; text-decoration: none; }
 .nav a:hover, .who a:hover { color: #fff; text-decoration: underline; }
@@ -116,7 +136,7 @@ button.link:hover { color: #fff; text-decoration: underline; }
   cursor: pointer; text-decoration: none;
 }
 .btn:hover { background: var(--teal-dark); border-color: var(--teal-dark); }
-.btn.secondary { background: #fff; color: var(--teal); }
+.btn.secondary { background: var(--surface); color: var(--teal); }
 .btn.secondary:hover { background: var(--teal-tint); }
 .btn.danger { background: var(--danger); border-color: var(--danger); }
 .btn.danger:hover { background: #8f2a22; }
@@ -127,7 +147,7 @@ button.link:hover { color: #fff; text-decoration: underline; }
 .messages { list-style: none; margin: 0 0 1rem; padding: 0; }
 .msg {
   padding: .7rem 1rem; border-radius: .5rem; margin: 0 0 .6rem;
-  border: 1px solid var(--line); background: #fff;
+  border: 1px solid var(--line); background: var(--surface);
 }
 .msg.success { background: #e5f4ec; border-color: #9fd2b6; color: #114b2f; }
 .msg.warning { background: var(--tab-tint); border-color: #e3c467; color: #4a3800; }
@@ -158,7 +178,7 @@ button.link:hover { color: #fff; text-decoration: underline; }
 .searchbox { display: flex; gap: .6rem; margin-bottom: 1.2rem; }
 .searchbox input {
   flex: 1; min-width: 0; font: inherit; font-size: 1.4rem; padding: .8rem 1.1rem;
-  border: 2px solid var(--line); border-radius: .7rem; background: #fff; color: var(--ink);
+  border: 2px solid var(--line); border-radius: .7rem; background: var(--surface); color: var(--ink);
 }
 .searchbox input:focus { border-color: var(--teal); outline: 3px solid rgba(10, 107, 114, .25); }
 .searchbox .btn { padding-inline: 1.6rem; font-size: 1.1rem; }
@@ -225,36 +245,15 @@ button.link:hover { color: #fff; text-decoration: underline; }
 .other-date summary { cursor: pointer; color: var(--teal); }
 .other-date .field { margin-top: .6rem; max-width: 16rem; }
 
-
-.table-wrap {
-    overflow-x: auto;
-}
-
-table.data {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.data th,
-.data td {
-    padding: .6rem .8rem;
-    text-align: start;
-    border-bottom: 1px solid var(--line);
-    vertical-align: top;
-}
-
-.data th {
-    color: var(--muted);
-    font-weight: 400;
-    font-size: .9rem;
-}
-
-.data th.num-head,
-.data td.num {
-    text-align: right;
-    direction: ltr;
-    white-space: nowrap;
-}
+.table-wrap { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; }
+.data th, .data td { padding: .6rem .8rem; text-align: start; border-bottom: 1px solid var(--line); vertical-align: top; }
+.data th { color: var(--muted); font-weight: 400; font-size: .9rem; }
+.col-actions { white-space: nowrap; width: 1%; }
+.col-actions a { margin-inline-start: .9rem; }
+.danger-link { color: var(--danger); }
+.pre { white-space: pre-line; }
+.empty-inline { color: var(--muted); padding: .6rem 0; margin: 0; }
 
 /* ---------- فرم‌ها ---------- */
 .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.3rem; }
@@ -265,7 +264,7 @@ table.data {
 .req { color: var(--danger); }
 input[type=text], input[type=search], input[type=password], input[type=number], textarea, select {
   width: 100%; font: inherit; padding: .6rem .8rem; color: var(--ink);
-  background: #fff; border: 1.5px solid var(--line); border-radius: .5rem;
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: .5rem;
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--teal); outline: 3px solid rgba(10, 107, 114, .25);
@@ -299,7 +298,9 @@ input:focus, textarea:focus, select:focus {
 .link-list a:hover { border-color: var(--teal); background: var(--teal-tint); }
 .link-list span { color: var(--muted); font-size: .92rem; }
 
-.login { margin-top: 3rem; }
+.login { margin-top: 3rem; text-align: center; }
+.login form, .login .sub { text-align: start; }
+.login-logo { width: 4.5rem; height: 4.5rem; object-fit: contain; margin-bottom: .6rem; }
 
 /* ---------- موبایل ---------- */
 @media (max-width: 640px) {
@@ -324,7 +325,7 @@ input:focus, textarea:focus, select:focus {
 .nav-dropdown[open] summary { color: #fff; }
 .nav-dropdown .menu {
   position: absolute; inset-inline-start: 0; top: 100%; margin-top: .4rem;
-  background: #fff; border: 1px solid #dbe2e2; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
   box-shadow: 0 6px 18px rgba(0,0,0,.12); min-width: 10rem; z-index: 20;
   padding: .3rem; display: flex; flex-direction: column;
 }
@@ -357,7 +358,7 @@ input:focus, textarea:focus, select:focus {
 .photo-upload input[type=text] { flex: 1; min-width: 10rem; }
 
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .8rem; }
-.photo-item { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.photo-item { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
 .photo-item img { width: 100%; height: 8rem; object-fit: cover; display: block; }
 .photo-meta { padding: .4rem .5rem; display: flex; flex-direction: column; gap: .15rem; font-size: .82rem; }
 
@@ -378,5 +379,22 @@ input:focus, textarea:focus, select:focus {
 
 .patient-avatar { width: 4.5rem; height: 4.5rem; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
 
+/* ---------- تنظیمات ریز تم تیره برای المان‌هایی که رنگ ثابت داشتند ---------- */
+:root[data-theme="dark"] .msg.success { background: #16321f; border-color: #2f6b45; color: #bfe8cd; }
+:root[data-theme="dark"] .msg.warning { background: #3a2f10; border-color: #7a5f1e; color: #f3d98a; }
+:root[data-theme="dark"] .msg.error { background: #3a1613; border-color: #7a352d; color: #f6c2ba; }
+:root[data-theme="dark"] .msg.info { background: #16333a; border-color: #2c5a62; color: #bfe3e8; }
+:root[data-theme="dark"] .result .open:hover,
+:root[data-theme="dark"] .week-list a:hover,
+:root[data-theme="dark"] .nav-dropdown .menu a:hover { background: #223034; }
+:root[data-theme="dark"] .medical-alert { background: #3a1613; border-color: #d7362a; color: #f6c2ba; }
+:root[data-theme="dark"] img.patient-avatar,
+:root[data-theme="dark"] .photo-item img { filter: brightness(.95); }
 
-
+/* ---------- کلید تعویض تم ---------- */
+.theme-toggle {
+  background: none; border: 1px solid rgba(255,255,255,.35); color: inherit;
+  border-radius: 999px; padding: .3rem .7rem; font: inherit; font-size: .85rem;
+  cursor: pointer; display: inline-flex; align-items: center; gap: .3rem;
+}
+.theme-toggle:hover { background: rgba(255,255,255,.12); }

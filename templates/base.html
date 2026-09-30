@@ -3,12 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{% endblock %} | Findent</title>
+  <title>{% block title %}{% endblock %} | DentiX</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32.png' %}">
+  <link rel="icon" type="image/png" sizes="64x64" href="{% static 'img/favicon-64.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/favicon-180.png' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script>
+    // قبل از رسم صفحه اجرا می‌شود تا هنگام رفرش، چشمک تم روشن دیده نشود
+    (function () {
+      try {
+        var saved = localStorage.getItem("dentix-theme");
+        if (saved === "dark") document.documentElement.setAttribute("data-theme", "dark");
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="{% url 'home' %}" dir="ltr">Findent</a>
+    <a class="brand" href="{% url 'home' %}">
+      <img src="{% static 'img/logo-icon.png' %}" alt="" class="brand-logo">
+      <span dir="ltr">DentiX</span>
+    </a>
+    <button type="button" class="theme-toggle" id="theme-toggle" aria-pressed="false">
+      <span class="theme-toggle-icon" aria-hidden="true">🌙</span>
+      <span class="theme-toggle-label">تم تیره</span>
+    </button>
     {% if not user.is_authenticated %}
       <a href="{% url 'about' %}" class="about-guest">درباره ما</a>
     {% endif %}

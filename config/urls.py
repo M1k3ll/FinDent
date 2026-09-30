@@ -3,11 +3,15 @@ from django.contrib.auth import views as auth_views
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import include, path, reverse_lazy
 
+admin.site.site_header = "DentiX - مدیریت"
+admin.site.site_title = "DentiX"
+admin.site.index_title = "مدیریت کاربران و داده‌ها"
+
 
 class PasswordChange(SuccessMessageMixin, auth_views.PasswordChangeView):
     template_name = "registration/password_change.html"
     success_url = reverse_lazy("home")
-    success_message = "رمز عبور تغییر کرد."
+    success_message = "رمز عبور شما تغییر کرد."
 
 
 urlpatterns = [
@@ -17,7 +21,3 @@ urlpatterns = [
     path("password/", PasswordChange.as_view(), name="password_change"),
     path("", include("patients.urls")),
 ]
-
-admin.site.site_header = "Findent: مدیریت"
-admin.site.site_title = "Findent"
-admin.site.index_title = "مدیریت کاربران و داده‌ها"

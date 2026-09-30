@@ -83,3 +83,33 @@
   });
   document.querySelectorAll(".amount-input").forEach(format);
 })();
+
+// تعویض تم روشن/تیره
+(function () {
+  var STORAGE_KEY = "dentix-theme";
+  var btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+
+  function apply(theme) {
+    if (theme === "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+      btn.setAttribute("aria-pressed", "true");
+      btn.querySelector(".theme-toggle-icon").textContent = "☀️";
+      btn.querySelector(".theme-toggle-label").textContent = "تم روشن";
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+      btn.setAttribute("aria-pressed", "false");
+      btn.querySelector(".theme-toggle-icon").textContent = "🌙";
+      btn.querySelector(".theme-toggle-label").textContent = "تم تیره";
+    }
+  }
+
+  var current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  apply(current);
+
+  btn.addEventListener("click", function () {
+    current = current === "dark" ? "light" : "dark";
+    apply(current);
+    try { localStorage.setItem(STORAGE_KEY, current); } catch (e) {}
+  });
+})();
