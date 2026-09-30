@@ -225,15 +225,36 @@ button.link:hover { color: #fff; text-decoration: underline; }
 .other-date summary { cursor: pointer; color: var(--teal); }
 .other-date .field { margin-top: .6rem; max-width: 16rem; }
 
-.table-wrap { overflow-x: auto; }
-table.data { width: 100%; border-collapse: collapse; }
-.data th, .data td { padding: .6rem .8rem; text-align: start; border-bottom: 1px solid var(--line); vertical-align: top; }
-.data th { color: var(--muted); font-weight: 400; font-size: .9rem; }
-.col-actions { white-space: nowrap; width: 1%; }
-.col-actions a { margin-inline-start: .9rem; }
-.danger-link { color: var(--danger); }
-.pre { white-space: pre-line; }
-.empty-inline { color: var(--muted); padding: .6rem 0; margin: 0; }
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+table.data {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data th,
+.data td {
+    padding: .6rem .8rem;
+    text-align: start;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+}
+
+.data th {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: .9rem;
+}
+
+.data th.num-head,
+.data td.num {
+    text-align: right;
+    direction: ltr;
+    white-space: nowrap;
+}
 
 /* ---------- فرم‌ها ---------- */
 .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.3rem; }
@@ -356,3 +377,6 @@ input:focus, textarea:focus, select:focus {
 .medical-alert .extra { font-weight: 400; margin-top: .3rem; }
 
 .patient-avatar { width: 4.5rem; height: 4.5rem; border-radius: 10px; object-fit: cover; border: 1px solid var(--line); }
+
+
+

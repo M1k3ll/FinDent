@@ -4,7 +4,7 @@
 {% block content %}
 <section class="card narrow login">
   <h1>ورود به Findent</h1>
-  <p class="sub">پرونده‌ی کاغذی بیمار را پیدا کنید.</p>
+  <p class="sub">پرونده بیماران</p>
   <form method="post" class="form">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}">
